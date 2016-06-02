@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 )
 
-func ReportSpamHandler(w http.ResponseWriter, req *http.Request){
+func SpamassassinReportSpamHandler(w http.ResponseWriter, req *http.Request){
 	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]
@@ -46,7 +46,7 @@ func ReportSpamHandler(w http.ResponseWriter, req *http.Request){
 	w.Write(jsonBytes)
 }
 
-func RevokeSpamHandler(w http.ResponseWriter, req *http.Request){
+func SpamassassinRevokeSpamHandler(w http.ResponseWriter, req *http.Request){
 	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]
@@ -87,7 +87,7 @@ func RevokeSpamHandler(w http.ResponseWriter, req *http.Request){
 }
 
 
-func SpamHandler(w http.ResponseWriter, req *http.Request) {
+func SpamassassinSpamHandler(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]

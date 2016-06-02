@@ -8,7 +8,7 @@ import (
 	"comentarismo-spam/server"
 )
 
-func TestSpamHandler(t *testing.T) {
+func TestSpamassassinSpamHandler(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
 		response := r.Post("/spam", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
@@ -20,7 +20,7 @@ func TestSpamHandler(t *testing.T) {
 	})
 }
 
-func TestSpamRevoke(t *testing.T) {
+func TestSpamassassinSpamRevoke(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
 		response := r.Post("/revoke", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
@@ -32,7 +32,7 @@ func TestSpamRevoke(t *testing.T) {
 	})
 }
 
-func TestSpamReport(t *testing.T) {
+func TestSpamassassinSpamReport(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
 		response := r.Post("/report", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");

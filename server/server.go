@@ -12,7 +12,7 @@ import (
 
 var (
 	router *pat.Router
-	Client *spamc.Client
+	SpamassassinClient *spamc.Client
 )
 
 type WebError struct {
@@ -21,7 +21,7 @@ type WebError struct {
 
 
 func init() {
-	Client = spamc.New("127.0.0.1:783", 10)
+	SpamassassinClient = spamc.New("127.0.0.1:783", 10)
 }
 
 //NewServer return pointer to new created server object
@@ -52,10 +52,16 @@ func InitRouting() *pat.Router {
 
 	r := pat.New()
 
-	/** CREATE NEW COMMENT **/
+	/** spamassassin http wrapper **/
+	r.Post("/sa_spam", SpamassassinSpamHandler)
+	r.Post("/sa_revoke", SpamassassinRevokeSpamHandler)
+	r.Post("/sa_report", SpamassassinReportSpamHandler)
+
+	/** bayes classifier spam **/
 	r.Post("/spam", SpamHandler)
 	r.Post("/revoke", RevokeSpamHandler)
 	r.Post("/report", ReportSpamHandler)
+
 
 	return r
 }
