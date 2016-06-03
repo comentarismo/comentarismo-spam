@@ -11,7 +11,7 @@ import (
 func TestSpamassassinSpamHandler(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
-		response := r.Post("/spam", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
+		response := r.Post("/sa_spam", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
 
 		log.Println(response.Body)
 		assert.Equal(t, 200, response.StatusCode)
@@ -23,7 +23,7 @@ func TestSpamassassinSpamHandler(t *testing.T) {
 func TestSpamassassinSpamRevoke(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
-		response := r.Post("/revoke", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
+		response := r.Post("/sa_revoke", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
 
 		log.Println(response.Body)
 		assert.Equal(t, 200, response.StatusCode)
@@ -35,7 +35,7 @@ func TestSpamassassinSpamRevoke(t *testing.T) {
 func TestSpamassassinSpamReport(t *testing.T) {
 
 	testflight.WithServer(server.InitRouting(), func(r *testflight.Requester) {
-		response := r.Post("/report", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
+		response := r.Post("/sa_report", testflight.FORM_ENCODED, "text=Aposto que foi o câncer .! Doença muito conhecida entre políticos corruptos Sul americanos.");
 
 		log.Println(response.Body)
 		assert.Equal(t, 200, response.StatusCode)

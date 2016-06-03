@@ -61,7 +61,7 @@ func InitRouting() *pat.Router {
 	r.Post("/spam", SpamHandler)
 	r.Post("/revoke", RevokeSpamHandler)
 	r.Post("/report", ReportSpamHandler)
-
+	r.Post("/white", WhitelistSpamHandler)
 
 	return r
 }

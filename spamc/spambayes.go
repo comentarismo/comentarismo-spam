@@ -24,6 +24,12 @@ var (
 	correction = 0.1
 )
 
+type SpamReport struct {
+	Code    int  	`json:"code"`
+	Error  string	 `json:"error"`
+	IsSpam bool	 `json:"isSpam"`
+}
+
 var REDIS_HOST = os.Getenv("REDIS_HOST")
 var REDIS_PORT = os.Getenv("REDIS_PORT")
 var REDIS_PASSWORD = os.Getenv("REDIS_PASSWORD")
@@ -91,15 +97,36 @@ func Flush() {
 func Train(categories, text string) {
 	RedisClient.SAdd(Redis_prefix + "categories", categories)
 
-	token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
+	detectedLang, err := lang.Guess(text)
+	if err != nil {
+		Debug("Error: Train, ",err)
+		detectedLang = "en"
+	}
+
+	Debug("Train, Lang detected: ",detectedLang)
+
+	token_occur := GetOccurances(detectedLang, text)
+	//token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
+
 	for word, count := range token_occur {
-		Debug("Train, ", word, count)
+		Debug("Train, ", categories, word, count)
 		RedisClient.HIncrBy(Redis_prefix + categories, word, int64(count))
 	}
 }
 
 func Untrain(categories, text string) {
-	token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
+
+	detectedLang, err := lang.Guess(text)
+	if err != nil {
+		detectedLang = "en"
+		return
+	}
+
+	Debug("Untrain, Lang detected: ",detectedLang)
+
+	token_occur := GetOccurances(detectedLang, text)
+	//token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
+
 	for word, count := range token_occur {
 		reply := RedisClient.HGet(Redis_prefix + categories, word)
 
@@ -122,6 +149,7 @@ func Untrain(categories, text string) {
 
 func Classify(text string) (key string) {
 	scores := Score(text)
+	log.Println("Classify, Scores: ",scores)
 	max := 0.0
 	if scores != nil {
 		for k, v := range scores {
@@ -130,9 +158,17 @@ func Classify(text string) (key string) {
 				key = k
 			}
 		}
+
+		log.Println("Classify, key: ", key, max)
+		if(key =="bad" && max == 0){
+			Debug("Will reclassify false spam to not spam as score is too low for being spam ")
+			key = "good"
+		}
+
 		return
 	}
 	key = "I dont know"
+	log.Println("Classify, key: ",key)
 	return
 }
 
@@ -144,19 +180,21 @@ func Score(text string) (res map[string]float64) {
 		return
 	}
 
+	Debug("Score, Lang detected: ",detectedLang)
+
 	token_occur := GetOccurances(detectedLang, text)
 
 	//token_occur := Occurances(English_tokenizer(text))
-	Debug("Score token_occur, ", token_occur)
+	Debug("Score, token_occur, ", token_occur)
 	res = make(map[string]float64)
 
 	reply := RedisClient.SMembers(Redis_prefix + "categories")
 
-	Debug("Score reply, ", reply)
+	Debug("Score, reply, ", reply)
 	for v1, category := range reply.Val() {
-		Debug("Score range reply.Val() ", v1, category)
+		Debug("Score, range reply.Val() ", v1, category)
 		tally := Tally(category)
-		Debug("Score tally, ", tally)
+		Debug("Score, tally, ", tally)
 		if tally == 0 {
 			continue
 		}
@@ -190,7 +228,7 @@ func Score(text string) (res map[string]float64) {
 				iVal = correction
 			}
 			res[category] += math.Log(iVal / float64(tally))
-			Debug("Score, res[category], ", res[category])
+			Debug("Score, res[category], ", category, res[category])
 		}
 	}
 
@@ -290,7 +328,8 @@ func init() {
 
 	//train with world know spam words
 	if LEARNSPAM == "true" {
-		StartLanguageSpam("config_spamwords_en.yaml", "english_spam")
+		targetFile := GetPWD("/spamc/config_spamwords_en.yaml")
+		StartLanguageSpam(targetFile, "english_spam")
 	}
 }
 
@@ -322,25 +361,39 @@ func StartLanguageSpam(cfg_filename string, targetIgnore string){
 func StartLanguageIgnore() {
 
 	/** BEGIN ENGLISH **/
-	SetConfigs("config_en.yaml", "english_ignore", English_ignore_words_map)
+	targetFile := GetPWD("/spamc/config_en.yaml")
+	SetConfigs(targetFile, "english_ignore", English_ignore_words_map)
 	/** END ENGLISH **/
 
 	/** BEGIN PORTUGUESE **/
-	SetConfigs("config_pt.yaml", "portuguese_ignore", Portuguese_ignore_words_map)
+	targetFile = GetPWD("/spamc/config_pt.yaml")
+	SetConfigs(targetFile, "portuguese_ignore", Portuguese_ignore_words_map)
 	/** END PORTUGUESE **/
 
 	/** BEGIN SPANISH **/
-	SetConfigs("config_es.yaml", "spanish_ignore", Spanish_ignore_words_map)
+	targetFile = GetPWD("/spamc/config_es.yaml")
+	SetConfigs(targetFile, "spanish_ignore", Spanish_ignore_words_map)
 	/** END SPANISH **/
 
 	/** BEGIN ITALIAN **/
-	SetConfigs("config_it.yaml", "italian_ignore", Italian_ignore_words_map)
+	targetFile = GetPWD("/spamc/config_it.yaml")
+	SetConfigs(targetFile, "italian_ignore", Italian_ignore_words_map)
 	/** END ITALIAN **/
 
 	/** BEGIN FRENCH **/
-	SetConfigs("config_fr.yaml", "french_ignore", French_ignore_words_map)
+	targetFile = GetPWD("/spamc/config_fr.yaml")
+	SetConfigs(targetFile, "french_ignore", French_ignore_words_map)
 	/** END FRENCH **/
 
+}
+
+func GetPWD(targetFile string)(pdw string){
+	path,_ := os.Getwd()
+	pdw = path+targetFile;
+	if _, err := os.Stat(pdw); os.IsNotExist(err) {
+		pdw = path+"/.."+targetFile
+	}
+	return
 }
 
 func SetConfigs(cfg_filename string, targetIgnore string, ignore_words_map map[string]int) {
