@@ -3,26 +3,33 @@ package spamc_test
 import (
 	"testing"
 	"comentarismo-spam/spamc"
+	"log"
 )
 
 func TestClassifySpamEn(t *testing.T) {
-	spamc.Train("good", "sunshine drugs love sex lobster sloth")
-	spamc.Train("bad", "fear death horror government zombie god")
+	log.Println("Will start server on learning mode, default to English. ")
+	targetFile := spamc.GetPWD("/spamc/config_spamwords_en.yaml")
+
+	spamc.StartLanguageSpam(targetFile, "english_spam","en")
+
+	lang := "en"
+	spamc.Train("good", "sunshine drugs love sex lobster sloth",lang)
+	spamc.Train("bad", "fear death horror government zombie god",lang)
 
 	targetWord := "sloths are so cute i love them"
-	class := spamc.Classify(targetWord)
+	class := spamc.Classify(targetWord,lang)
 	if class != "good" {
 		t.Errorf("Classify failed, word (%s) should be good, result: %s", targetWord, class)
 	}
 
 	targetWord = "i fear god and love the government"
-	class = spamc.Classify(targetWord)
+	class = spamc.Classify(targetWord,lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, word (%s) should be bad, result: %s", targetWord, class)
 	}
 
 	targetWord = "Fantastic deal"
-	class = spamc.Classify(targetWord)
+	class = spamc.Classify(targetWord,lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, word (%s) should be bad, result: %s", targetWord, class)
 	}else {
@@ -30,7 +37,7 @@ func TestClassifySpamEn(t *testing.T) {
 	}
 
 	targetWord = "Get paid Now"
-	class = spamc.Classify(targetWord)
+	class = spamc.Classify(targetWord,lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, word (%s) should be bad, result: %s", targetWord, class)
 	}else {
@@ -38,7 +45,7 @@ func TestClassifySpamEn(t *testing.T) {
 	}
 
 	targetWord = "Cancel at any time with Full refund"
-	class = spamc.Classify(targetWord)
+	class = spamc.Classify(targetWord,lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, word (%s) should be bad, result: %s", targetWord, class)
 	}else {
@@ -46,7 +53,7 @@ func TestClassifySpamEn(t *testing.T) {
 	}
 
 	targetWord = "Easy terms its Full refund"
-	class = spamc.Classify(targetWord)
+	class = spamc.Classify(targetWord,lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, word (%s) should be bad, result: %s", targetWord, class)
 	}else {

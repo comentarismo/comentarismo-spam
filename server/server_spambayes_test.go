@@ -17,28 +17,28 @@ func TestSpamBayesHandler(t *testing.T) {
 
 		Convey("Should Learn spammy words in english and report not spam for normal commentary", t, func() {
 			targetWord := "Fantastic deal"
-			response := r.Post("/report", testflight.FORM_ENCODED, "text=" + targetWord);
+			response := r.Post("/report?lang=en", testflight.FORM_ENCODED, "text=" + targetWord);
 			log.Println(response.Body)
 			assert.Equal(t, 200, response.StatusCode)
 
 			targetWord = "Get paid Now"
-			response = r.Post("/report", testflight.FORM_ENCODED, "text=" + targetWord);
+			response = r.Post("/report?lang=en", testflight.FORM_ENCODED, "text=" + targetWord);
 			log.Println(response.Body)
 			assert.Equal(t, 200, response.StatusCode)
 
 			targetWord = "Cancel at any time with"
-			response = r.Post("/report", testflight.FORM_ENCODED, "text=" + targetWord);
+			response = r.Post("/report?lang=en", testflight.FORM_ENCODED, "text=" + targetWord);
 			log.Println(response.Body)
 			assert.Equal(t, 200, response.StatusCode)
 
 			targetWord = "Easy terms its Full refund"
-			response = r.Post("/report", testflight.FORM_ENCODED, "text=" + targetWord);
+			response = r.Post("/report?lang=en", testflight.FORM_ENCODED, "text=" + targetWord);
 			log.Println(response.Body)
 			assert.Equal(t, 200, response.StatusCode)
 
 			//now try with a good comment
 			textTarget := "Amazing. great tits, shitty music"
-			response = r.Post("/spam", testflight.FORM_ENCODED, "text="+textTarget );
+			response = r.Post("/spam?lang=en", testflight.FORM_ENCODED, "text="+textTarget );
 
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
@@ -56,7 +56,7 @@ func TestSpamBayesHandler(t *testing.T) {
 
 			//now try with a spammy comment
 			textTarget = "Easy terms its Full refund"
-			response = r.Post("/spam", testflight.FORM_ENCODED, "text="+textTarget );
+			response = r.Post("/spam?lang=en", testflight.FORM_ENCODED, "text="+textTarget );
 
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
@@ -74,7 +74,7 @@ func TestSpamBayesHandler(t *testing.T) {
 
 			//now revoke the spammy comment
 			textTarget = "Easy terms its Full refund"
-			response = r.Post("/revoke", testflight.FORM_ENCODED, "text="+textTarget );
+			response = r.Post("/revoke?lang=en", testflight.FORM_ENCODED, "text="+textTarget );
 
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
@@ -82,7 +82,7 @@ func TestSpamBayesHandler(t *testing.T) {
 
 			//now it should not be spam anymore
 			textTarget = "Easy terms its Full refund"
-			response = r.Post("/spam", testflight.FORM_ENCODED, "text="+textTarget );
+			response = r.Post("/spam?lang=en", testflight.FORM_ENCODED, "text="+textTarget );
 
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)

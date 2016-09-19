@@ -12,23 +12,21 @@ REDIS_PORT, port number of the redis instance to be used (required) defaults to 
 REDIS_PASSWORD, password for this instance to be used (optional)
 ```
 
-Running with defaults, to start in debug mode and learn spammy words
+Running with expected cfg for dev, start port 3004 in debug mode and learn spammy words
 ```
-$ SPAM_DEBUG=true LEARNSPAM=true godep go run main.go
-```
-
-```
-$ SPAM_DEBUG=true LEARNSPAM=true godep go run main.go
+$ SPAM_DEBUG=true LEARNSPAM=true PORT=3004 godep go run main.go
 ```
 
 
+Testing API
+```
+$ go test server_spambayes_test.go -v
+```
 
 Testing API Spamassasssin
 ```
 $ SPAM_DEBUG=false LEARNSPAM=true go test server_sa_test.go -v
 ```
-
-
 
 ```
 sudo aptitude install spamassassin spamc
@@ -49,10 +47,15 @@ http://stopforumspam.com/
 A DNSBL server and RBL Checker client written in node.js
 https://github.com/jawsome/node-dnsbl
 
+socket anti spam module
+https://www.npmjs.com/package/socket-anti-spam
+
 https://www.npmjs.com/browse/keyword/spam?offset=36
 
 http://www.trevorayers.com/wordpress-spam-filter-keyword-list/
 
+checks if a url shortened is spam or not based on domain of redirected url
+https://github.com/Planeshifter/node-spam-detector
 
 ```
 Word,Score

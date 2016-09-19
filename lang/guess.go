@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
-	"comentarismo-moody/lang/models"
+	"comentarismo-spam/lang/models"
 )
 
 var (

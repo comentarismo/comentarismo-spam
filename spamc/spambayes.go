@@ -60,6 +60,8 @@ func Tokenizer(s string, ignore_words_map map[string]int) (res []string) {
 
 	for _, word := range words {
 		strings.TrimSpace(word)
+		word = strings.ToLower(word)
+
 		_, omit := ignore_words_map[word]
 		if omit || len(word) <= 2 {
 			continue
@@ -81,6 +83,7 @@ func Occurances(words []string) (counts map[string]uint) {
 			counts[word] = 1
 		}
 	}
+	//Debug("compute word occurances, ",counts)
 	return
 }
 
@@ -94,32 +97,43 @@ func Flush() {
 	RedisClient.Del(Redis_prefix + "categories")
 }
 
-func Train(categories, text string) {
+func Train(categories, text, l string) {
 	RedisClient.SAdd(Redis_prefix + "categories", categories)
 
-	detectedLang, err := lang.Guess(text)
-	if err != nil {
-		Debug("Error: Train, ",err)
-		detectedLang = "en"
+	detectedLang := ""
+	var err error
+	if(l == "") {
+		Debug("Train, Lang could not detect language, will try to Guess ",detectedLang)
+		detectedLang, err = lang.Guess(text)
+		if err != nil {
+			detectedLang = "en"
+		}
+	}else {
+		detectedLang = l
 	}
 
-	Debug("Train, Lang detected: ",detectedLang)
+	//Debug("Train, Lang detected: ",detectedLang)
 
 	token_occur := GetOccurances(detectedLang, text)
 	//token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
 
 	for word, count := range token_occur {
-		Debug("Train, ", categories, word, count)
+		Debug("Train, ", Redis_prefix + categories, word, count)
 		RedisClient.HIncrBy(Redis_prefix + categories, word, int64(count))
 	}
 }
 
-func Untrain(categories, text string) {
+func Untrain(categories, text, l string) {
 
-	detectedLang, err := lang.Guess(text)
-	if err != nil {
-		detectedLang = "en"
-		return
+	detectedLang := ""
+	var err error
+	if(l == "") {
+		detectedLang, err = lang.Guess(text)
+		if err != nil {
+			detectedLang = "en"
+		}
+	}else {
+		detectedLang = l
 	}
 
 	Debug("Untrain, Lang detected: ",detectedLang)
@@ -147,8 +161,8 @@ func Untrain(categories, text string) {
 	}
 }
 
-func Classify(text string) (key string) {
-	scores := Score(text)
+func Classify(text, lang string) (key string) {
+	scores := Score(text, lang)
 	log.Println("Classify, Scores: ",scores)
 	max := 0.0
 	if scores != nil {
@@ -168,16 +182,21 @@ func Classify(text string) (key string) {
 		return
 	}
 	key = "I dont know"
-	log.Println("Classify, key: ",key)
+	log.Println("Error: Could not Classify, text: ", text, key)
 	return
 }
 
-func Score(text string) (res map[string]float64) {
+func Score(text, l string) (res map[string]float64) {
 
-	detectedLang, err := lang.Guess(text)
-	if err != nil {
-		detectedLang = "en"
-		return
+	detectedLang := ""
+	var err error
+	if(l == "") {
+		detectedLang, err = lang.Guess(text)
+		if err != nil {
+			detectedLang = "en"
+		}
+	}else {
+		detectedLang = l
 	}
 
 	Debug("Score, Lang detected: ",detectedLang)
@@ -201,11 +220,11 @@ func Score(text string) (res map[string]float64) {
 
 		res[category] = 0.0
 		for word, v := range token_occur {
-			Debug("Score, range token_occur, ", word, v)
+			Debug("Score, range token_occur,", word, ", count:",v)
 
-			Debug("Score, RedisClient.HGet ", Redis_prefix + category, word)
+			Debug("Score, will run RedisClient.HGet,", Redis_prefix + category, word)
 			score := RedisClient.HGet(Redis_prefix + category, word)
-			Debug("Score, RedisClient.HGet result ", score.Val())
+			Debug("Score, result of RedisClient.HGet,", score.Val())
 
 			if score == nil {
 				continue
@@ -237,11 +256,10 @@ func Score(text string) (res map[string]float64) {
 
 var supportedLang []string = []string{
 	"pt",
-	"pt_PT",
-	"pt_BR",
 	"fr",
 	"it",
 	"es",
+	"en",
 }
 
 func GetOccurances(lang, text string) (counts map[string]uint) {
@@ -257,25 +275,18 @@ func GetOccurances(lang, text string) (counts map[string]uint) {
 	if !supported {
 		Debug("WARN: Will use default lang EN ", lang, supportedLang)
 		counts = Occurances(Tokenizer(text, English_ignore_words_map))
-		return
-	}
-
-	//identify what will be the tokenizer used
-	if strings.ContainsAny(lang, "pt") {
+	} else if strings.ContainsAny(lang, "en") {
+		counts = Occurances(Tokenizer(text, English_ignore_words_map))
+	}else if strings.ContainsAny(lang, "pt") {
 		counts = Occurances(Tokenizer(text, Portuguese_ignore_words_map))
-	}
-
-	//identify what will be the tokenizer used
-	if lang == "es" {
+	} else if lang == "es" {
 		counts = Occurances(Tokenizer(text, Spanish_ignore_words_map))
-	}
-
-	if lang == "it" {
+	} else if lang == "it" {
 		counts = Occurances(Tokenizer(text, Italian_ignore_words_map))
-	}
-
-	if lang == "fr" {
+	} else if lang == "fr" {
 		counts = Occurances(Tokenizer(text, French_ignore_words_map))
+	} else {
+		log.Println("ERROR: GetOccurances, Could not identify Language, ",lang )
 	}
 
 	return
@@ -328,12 +339,13 @@ func init() {
 
 	//train with world know spam words
 	if LEARNSPAM == "true" {
+		log.Println("Will start server on learning mode, default to English. ")
 		targetFile := GetPWD("/spamc/config_spamwords_en.yaml")
-		StartLanguageSpam(targetFile, "english_spam")
+		StartLanguageSpam(targetFile, "english_spam","en")
 	}
 }
 
-func StartLanguageSpam(cfg_filename string, targetIgnore string){
+func StartLanguageSpam(cfg_filename, targetIgnore, lang string){
 	Debug("StartLanguageSpam init")
 	config, err := yaml.ReadFile(cfg_filename)
 	if err != nil {
@@ -351,8 +363,9 @@ func StartLanguageSpam(cfg_filename string, targetIgnore string){
 	ignore_words_list := strings.Fields(to_ignore)
 	for _, word := range ignore_words_list {
 		word = strings.TrimSpace(word)
-		Debug("StartLanguageSpam Train, ",word)
-		Train("bad",word);
+		word = strings.ToLower(word)
+		//Debug("StartLanguageSpam Train, ",word)
+		Train("bad",word,lang);
 	}
 	Debug("StartLanguageSpam end")
 
