@@ -387,10 +387,10 @@ func processResponse(cmd string, data *bufio.Reader) (returnObj *SpamDOut, err e
 		var result = r.FindStringSubmatch(lineStr)
 
 		if len(result) > 0 {
-			returnObj.Vars["isSpam"] = false
+			returnObj.Vars["spam"] = false
 			switch result[1][0:1] {
 			case "T", "t", "Y", "y":
-				returnObj.Vars["isSpam"] = true
+				returnObj.Vars["spam"] = true
 			}
 			returnObj.Vars["spamScore"], _ = strconv.ParseFloat(result[2], 64)
 			returnObj.Vars["baseSpamScore"], _ = strconv.ParseFloat(result[3], 64)

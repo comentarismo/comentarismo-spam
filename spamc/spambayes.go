@@ -27,7 +27,7 @@ var (
 type SpamReport struct {
 	Code    int  	`json:"code"`
 	Error  string	 `json:"error"`
-	IsSpam bool	 `json:"isSpam"`
+	IsSpam bool	 `json:"spam"`
 }
 
 var REDIS_HOST = os.Getenv("REDIS_HOST")
@@ -163,7 +163,7 @@ func Untrain(categories, text, l string) {
 
 func Classify(text, lang string) (key string) {
 	scores := Score(text, lang)
-	log.Println("Classify, Scores: ",scores)
+	Debug("Classify, Scores: ",scores)
 	max := 0.0
 	if scores != nil {
 		for k, v := range scores {
@@ -173,7 +173,7 @@ func Classify(text, lang string) (key string) {
 			}
 		}
 
-		log.Println("Classify, key: ", key, max)
+		Debug("Classify, key: ", key, max)
 		if(key =="bad" && max == 0){
 			Debug("Will reclassify false spam to not spam as score is too low for being spam ")
 			key = "good"
@@ -182,7 +182,7 @@ func Classify(text, lang string) (key string) {
 		return
 	}
 	key = "I dont know"
-	log.Println("Error: Could not Classify, text: ", text, key)
+	Debug("Error: Could not Classify, text: ", text, key)
 	return
 }
 
@@ -286,7 +286,7 @@ func GetOccurances(lang, text string) (counts map[string]uint) {
 	} else if lang == "fr" {
 		counts = Occurances(Tokenizer(text, French_ignore_words_map))
 	} else {
-		log.Println("ERROR: GetOccurances, Could not identify Language, ",lang )
+		Debug("ERROR: GetOccurances, Could not identify Language, ",lang )
 	}
 
 	return
@@ -339,7 +339,7 @@ func init() {
 
 	//train with world know spam words
 	if LEARNSPAM == "true" {
-		log.Println("Will start server on learning mode, default to English. ")
+		Debug("Will start server on learning mode, default to English. ")
 		targetFile := GetPWD("/spamc/config_spamwords_en.yaml")
 		StartLanguageSpam(targetFile, "english_spam","en")
 	}

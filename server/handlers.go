@@ -222,7 +222,7 @@ func SpamHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	log.Println("SpamHandler, -->  ", text)
+	//log.Println("SpamHandler, -->  ", text)
 
 	//classify spam text
 	//reply, err := SpamassassinClient.Check(text[0])
@@ -235,8 +235,8 @@ func SpamHandler(w http.ResponseWriter, req *http.Request) {
 		reply.IsSpam = false
 	}
 
-	log.Println("SpamHandler, reply.Code,  ", reply.Code)
-	log.Println("SpamHandler reply.IsSpam, ", reply.IsSpam)
+	//log.Println("SpamHandler, reply.Code,  ", reply.Code)
+	//log.Println("SpamHandler reply.IsSpam, ", reply.IsSpam)
 
 	//marshal comment
 	jsonBytes, err := json.Marshal(&reply)

@@ -43,7 +43,7 @@ func TestSpamBayesHandler(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
 
-			log.Println(response.Body) //{"code":200,"error":"","isSpam":false}
+			log.Println(response.Body) //{"code":200,"error":"","spam":false}
 
 			spamReport := spamc.SpamReport{}
 			err := json.Unmarshal(response.RawBody, &spamReport)
@@ -61,7 +61,7 @@ func TestSpamBayesHandler(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
 
-			log.Println(response.Body) //{"code":200,"error":"","isSpam":true}
+			log.Println(response.Body) //{"code":200,"error":"","spam":true}
 
 			spamReport = spamc.SpamReport{}
 			err = json.Unmarshal(response.RawBody, &spamReport)
@@ -78,7 +78,7 @@ func TestSpamBayesHandler(t *testing.T) {
 
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
-			log.Println(response.Body) //{"code":200,"error":"","isSpam":true}
+			log.Println(response.Body) //{"code":200,"error":"","spam":true}
 
 			//now it should not be spam anymore
 			textTarget = "Easy terms its Full refund"
@@ -87,7 +87,7 @@ func TestSpamBayesHandler(t *testing.T) {
 			So(response.StatusCode, ShouldEqual, 200)
 			So(len(response.Body), ShouldBeGreaterThan, 0)
 
-			log.Println(response.Body) //{"code":200,"error":"","isSpam":true}
+			log.Println(response.Body) //{"code":200,"error":"","spam":true}
 
 			spamReport = spamc.SpamReport{}
 			err = json.Unmarshal(response.RawBody, &spamReport)
