@@ -346,11 +346,11 @@ func init() {
 }
 
 func StartLanguageSpam(cfg_filename, targetIgnore, lang string){
-	Debug("StartLanguageSpam init")
+	Debug("StartLanguageSpam init, ",cfg_filename)
 	config, err := yaml.ReadFile(cfg_filename)
 	if err != nil {
-		log.Fatalf("readfile(%s): %s", cfg_filename, err)
 		Debug("Error: init, Can't readfile ", cfg_filename, err)
+		log.Fatalf("readfile(%s): %s", cfg_filename, err)
 		panic("Error: init, Can't readfile ")
 	}
 	to_ignore, err := config.Get(targetIgnore)
