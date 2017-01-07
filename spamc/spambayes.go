@@ -1,39 +1,39 @@
 package spamc
 
 import (
-	redis "gopkg.in/redis.v3"
+	"comentarismo-spam/lang"
 	"github.com/kylelemons/go-gypsy/yaml"
+	redis "gopkg.in/redis.v3"
 	"log"
 	"math"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"os"
-	"comentarismo-spam/lang"
 )
 
 var (
-	English_ignore_words_map = make(map[string]int)
+	English_ignore_words_map    = make(map[string]int)
 	Portuguese_ignore_words_map = make(map[string]int)
-	Spanish_ignore_words_map = make(map[string]int)
-	Italian_ignore_words_map = make(map[string]int)
-	French_ignore_words_map = make(map[string]int)
+	Spanish_ignore_words_map    = make(map[string]int)
+	Italian_ignore_words_map    = make(map[string]int)
+	French_ignore_words_map     = make(map[string]int)
 
-	RedisClient                        *redis.Client
+	RedisClient  *redis.Client
 	Redis_prefix = "bayes:"
-	correction = 0.1
+	correction   = 0.1
 )
 
 type SpamReport struct {
-	Code    int  	`json:"code"`
-	Error  string	 `json:"error"`
-	IsSpam bool	 `json:"spam"`
+	Code   int    `json:"code"`
+	Error  string `json:"error"`
+	IsSpam bool   `json:"spam"`
 }
 
 var REDIS_HOST = os.Getenv("REDIS_HOST")
 var REDIS_PORT = os.Getenv("REDIS_PORT")
 var REDIS_PASSWORD = os.Getenv("REDIS_PASSWORD")
-var SPAM_DEBUG = os.Getenv("SPAM_DEBUG");
+var SPAM_DEBUG = os.Getenv("SPAM_DEBUG")
 
 var LEARNSPAM = os.Getenv("LEARNSPAM")
 
@@ -72,7 +72,6 @@ func Tokenizer(s string, ignore_words_map map[string]int) (res []string) {
 	return
 }
 
-
 // compute word occurances
 func Occurances(words []string) (counts map[string]uint) {
 	counts = make(map[string]uint)
@@ -98,17 +97,17 @@ func Flush() {
 }
 
 func Train(categories, text, l string) {
-	RedisClient.SAdd(Redis_prefix + "categories", categories)
+	RedisClient.SAdd(Redis_prefix+"categories", categories)
 
 	detectedLang := ""
 	var err error
-	if(l == "") {
-		Debug("Train, Lang could not detect language, will try to Guess ",detectedLang)
+	if l == "" {
+		Debug("Train, Lang could not detect language, will try to Guess ", detectedLang)
 		detectedLang, err = lang.Guess(text)
 		if err != nil {
 			detectedLang = "en"
 		}
-	}else {
+	} else {
 		detectedLang = l
 	}
 
@@ -118,8 +117,8 @@ func Train(categories, text, l string) {
 	//token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
 
 	for word, count := range token_occur {
-		Debug("Train, ", Redis_prefix + categories, word, count)
-		RedisClient.HIncrBy(Redis_prefix + categories, word, int64(count))
+		Debug("Train, ", Redis_prefix+categories, word, count)
+		RedisClient.HIncrBy(Redis_prefix+categories, word, int64(count))
 	}
 }
 
@@ -127,43 +126,43 @@ func Untrain(categories, text, l string) {
 
 	detectedLang := ""
 	var err error
-	if(l == "") {
+	if l == "" {
 		detectedLang, err = lang.Guess(text)
 		if err != nil {
 			detectedLang = "en"
 		}
-	}else {
+	} else {
 		detectedLang = l
 	}
 
-	Debug("Untrain, Lang detected: ",detectedLang)
+	Debug("Untrain, Lang detected: ", detectedLang)
 
 	token_occur := GetOccurances(detectedLang, text)
 	//token_occur := Occurances(Tokenizer(text, English_ignore_words_map))
 
 	for word, count := range token_occur {
-		reply := RedisClient.HGet(Redis_prefix + categories, word)
+		reply := RedisClient.HGet(Redis_prefix+categories, word)
 
 		cur, _ := strconv.ParseUint(string(reply.Val()), 10, 0)
 		if cur != 0 {
 			inew := cur - uint64(count)
 			if inew > 0 {
-				RedisClient.HSet(Redis_prefix + categories, word, strconv.Itoa(int(inew)))
+				RedisClient.HSet(Redis_prefix+categories, word, strconv.Itoa(int(inew)))
 			} else {
-				RedisClient.HDel(Redis_prefix + categories, word)
+				RedisClient.HDel(Redis_prefix+categories, word)
 			}
 		}
 	}
 
 	if Tally(categories) == 0 {
 		RedisClient.Del(Redis_prefix + categories)
-		RedisClient.SRem(Redis_prefix + "categories", categories)
+		RedisClient.SRem(Redis_prefix+"categories", categories)
 	}
 }
 
 func Classify(text, lang string) (key string) {
 	scores := Score(text, lang)
-	Debug("Classify, Scores: ",scores)
+	Debug("Classify, Scores: ", scores)
 	max := 0.0
 	if scores != nil {
 		for k, v := range scores {
@@ -174,7 +173,7 @@ func Classify(text, lang string) (key string) {
 		}
 
 		Debug("Classify, key: ", key, max)
-		if(key =="bad" && max == 0){
+		if key == "bad" && max == 0 {
 			Debug("Will reclassify false spam to not spam as score is too low for being spam ")
 			key = "good"
 		}
@@ -190,16 +189,16 @@ func Score(text, l string) (res map[string]float64) {
 
 	detectedLang := ""
 	var err error
-	if(l == "") {
+	if l == "" {
 		detectedLang, err = lang.Guess(text)
 		if err != nil {
 			detectedLang = "en"
 		}
-	}else {
+	} else {
 		detectedLang = l
 	}
 
-	Debug("Score, Lang detected: ",detectedLang)
+	Debug("Score, Lang detected: ", detectedLang)
 
 	token_occur := GetOccurances(detectedLang, text)
 
@@ -220,10 +219,10 @@ func Score(text, l string) (res map[string]float64) {
 
 		res[category] = 0.0
 		for word, v := range token_occur {
-			Debug("Score, range token_occur,", word, ", count:",v)
+			Debug("Score, range token_occur,", word, ", count:", v)
 
-			Debug("Score, will run RedisClient.HGet,", Redis_prefix + category, word)
-			score := RedisClient.HGet(Redis_prefix + category, word)
+			Debug("Score, will run RedisClient.HGet,", Redis_prefix+category, word)
+			score := RedisClient.HGet(Redis_prefix+category, word)
 			Debug("Score, result of RedisClient.HGet,", score.Val())
 
 			if score == nil {
@@ -277,7 +276,7 @@ func GetOccurances(lang, text string) (counts map[string]uint) {
 		counts = Occurances(Tokenizer(text, English_ignore_words_map))
 	} else if strings.ContainsAny(lang, "en") {
 		counts = Occurances(Tokenizer(text, English_ignore_words_map))
-	}else if strings.ContainsAny(lang, "pt") {
+	} else if strings.ContainsAny(lang, "pt") {
 		counts = Occurances(Tokenizer(text, Portuguese_ignore_words_map))
 	} else if lang == "es" {
 		counts = Occurances(Tokenizer(text, Spanish_ignore_words_map))
@@ -286,7 +285,7 @@ func GetOccurances(lang, text string) (counts map[string]uint) {
 	} else if lang == "fr" {
 		counts = Occurances(Tokenizer(text, French_ignore_words_map))
 	} else {
-		Debug("ERROR: GetOccurances, Could not identify Language, ",lang )
+		Debug("ERROR: GetOccurances, Could not identify Language, ", lang)
 	}
 
 	return
@@ -322,12 +321,11 @@ func init() {
 
 	StartLanguageIgnore()
 
-
 	// get redis connection info
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     REDIS_HOST + ":" + REDIS_PORT,
 		Password: REDIS_PASSWORD, // no password set
-		DB:       0, // use default DB
+		DB:       0,              // use default DB
 	})
 
 	pong, err := RedisClient.Ping().Result()
@@ -341,12 +339,12 @@ func init() {
 	if LEARNSPAM == "true" {
 		Debug("Will start server on learning mode, default to English. ")
 		targetFile := GetPWD("/spamc/config_spamwords_en.yaml")
-		StartLanguageSpam(targetFile, "english_spam","en")
+		StartLanguageSpam(targetFile, "english_spam", "en")
 	}
 }
 
-func StartLanguageSpam(cfg_filename, targetIgnore, lang string){
-	Debug("StartLanguageSpam init, ",cfg_filename)
+func StartLanguageSpam(cfg_filename, targetIgnore, lang string) {
+	Debug("StartLanguageSpam init, ", cfg_filename)
 	config, err := yaml.ReadFile(cfg_filename)
 	if err != nil {
 		Debug("Error: init, Can't readfile ", cfg_filename, err)
@@ -355,7 +353,7 @@ func StartLanguageSpam(cfg_filename, targetIgnore, lang string){
 	}
 	to_ignore, err := config.Get(targetIgnore)
 	if err != nil {
-		Debug("Error: init, Can't parse " + targetIgnore, to_ignore, err)
+		Debug("Error: init, Can't parse "+targetIgnore, to_ignore, err)
 		panic("Error: init, Can't parse " + targetIgnore)
 	}
 
@@ -365,7 +363,7 @@ func StartLanguageSpam(cfg_filename, targetIgnore, lang string){
 		word = strings.TrimSpace(word)
 		word = strings.ToLower(word)
 		//Debug("StartLanguageSpam Train, ",word)
-		Train("bad",word,lang);
+		Train("bad", word, lang)
 	}
 	Debug("StartLanguageSpam end")
 
@@ -400,11 +398,11 @@ func StartLanguageIgnore() {
 
 }
 
-func GetPWD(targetFile string)(pdw string){
-	path,_ := os.Getwd()
-	pdw = path+targetFile;
+func GetPWD(targetFile string) (pdw string) {
+	path, _ := os.Getwd()
+	pdw = path + targetFile
 	if _, err := os.Stat(pdw); os.IsNotExist(err) {
-		pdw = path+"/.."+targetFile
+		pdw = path + "/.." + targetFile
 	}
 	return
 }
@@ -418,7 +416,7 @@ func SetConfigs(cfg_filename string, targetIgnore string, ignore_words_map map[s
 	}
 	to_ignore, err := config.Get(targetIgnore)
 	if err != nil {
-		Debug("Error: init, Can't parse " + targetIgnore, to_ignore, err)
+		Debug("Error: init, Can't parse "+targetIgnore, to_ignore, err)
 		panic("Error: init, Can't parse " + targetIgnore)
 	}
 

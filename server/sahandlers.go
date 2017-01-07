@@ -1,13 +1,13 @@
 package server
 
 import (
-	"net/http"
-	"log"
 	"encoding/json"
+	"log"
+	"net/http"
 )
 
-func SpamassassinReportSpamHandler(w http.ResponseWriter, req *http.Request){
-	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
+func SpamassassinReportSpamHandler(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm() //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]
 
@@ -29,7 +29,7 @@ func SpamassassinReportSpamHandler(w http.ResponseWriter, req *http.Request){
 		log.Println("Error: ReportSpamHandler Marshal -> ", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
-	}else {
+	} else {
 		log.Println(reply.Code)
 		log.Println(reply.Message)
 		log.Println(reply.Vars)
@@ -46,8 +46,8 @@ func SpamassassinReportSpamHandler(w http.ResponseWriter, req *http.Request){
 	w.Write(jsonBytes)
 }
 
-func SpamassassinRevokeSpamHandler(w http.ResponseWriter, req *http.Request){
-	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
+func SpamassassinRevokeSpamHandler(w http.ResponseWriter, req *http.Request) {
+	req.ParseForm() //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]
 
@@ -69,7 +69,7 @@ func SpamassassinRevokeSpamHandler(w http.ResponseWriter, req *http.Request){
 		log.Println("Error: RevokeSpamHandler Marshal -> ", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
-	}else {
+	} else {
 		log.Println(reply.Code)
 		log.Println(reply.Message)
 		log.Println(reply.Vars)
@@ -86,9 +86,8 @@ func SpamassassinRevokeSpamHandler(w http.ResponseWriter, req *http.Request){
 	w.Write(jsonBytes)
 }
 
-
 func SpamassassinSpamHandler(w http.ResponseWriter, req *http.Request) {
-	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
+	req.ParseForm() //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 	text := req.Form["text"]
 
@@ -110,7 +109,7 @@ func SpamassassinSpamHandler(w http.ResponseWriter, req *http.Request) {
 		log.Println("Error: SpamHandler Marshal -> ", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
-	}else {
+	} else {
 		log.Println(reply.Code)
 		log.Println(reply.Message)
 		log.Println(reply.Vars)

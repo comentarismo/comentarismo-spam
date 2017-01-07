@@ -1,14 +1,14 @@
 package server
 
 import (
-	"net/http"
-	"log"
-	"encoding/json"
 	"comentarismo-spam/spamc"
+	"encoding/json"
+	"log"
+	"net/http"
 )
 
 func ReportSpamHandler(w http.ResponseWriter, req *http.Request) {
-	req.ParseForm()  //Parse url parameters passed, then parse the response packet for the POST body (request body)
+	req.ParseForm() //Parse url parameters passed, then parse the response packet for the POST body (request body)
 	//log.Println(req.Form) // print information on server side.
 
 	lang := req.URL.Query().Get("lang")
@@ -107,7 +107,6 @@ func RevokeSpamHandler(w http.ResponseWriter, req *http.Request) {
 	spamc.Untrain("bad", text[0], lang)
 
 	reply.Code = 200
-
 
 	//marshal comment
 	jsonBytes, err := json.Marshal(&reply)

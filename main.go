@@ -1,8 +1,8 @@
 package main
 
 import (
-	"os"
 	"comentarismo-spam/server"
+	"os"
 )
 
 var Port = os.Getenv("PORT")

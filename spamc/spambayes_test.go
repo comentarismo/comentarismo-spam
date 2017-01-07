@@ -1,8 +1,8 @@
 package spamc_test
 
 import (
-	"testing"
 	"comentarismo-spam/spamc"
+	"testing"
 )
 
 func TestTidy(t *testing.T) {
@@ -31,7 +31,7 @@ func TestOccurances(t *testing.T) {
 
 func TestFlushEn(t *testing.T) {
 	lang := "en"
-	spamc.Train("good", "sunshine drugs love sex lobster sloth",lang)
+	spamc.Train("good", "sunshine drugs love sex lobster sloth", lang)
 	spamc.Flush()
 
 	exists := spamc.RedisClient.Exists(spamc.Redis_prefix + "good")
@@ -43,15 +43,15 @@ func TestFlushEn(t *testing.T) {
 func TestClassifyEn(t *testing.T) {
 	lang := "en"
 	spamc.Flush()
-	spamc.Train("good", "sunshine drugs love sex lobster sloth",lang)
-	spamc.Train("bad", "fear death horror government zombie god",lang)
+	spamc.Train("good", "sunshine drugs love sex lobster sloth", lang)
+	spamc.Train("bad", "fear death horror government zombie god", lang)
 
-	class := spamc.Classify("sloths are so cute i love them",lang)
+	class := spamc.Classify("sloths are so cute i love them", lang)
 	if class != "good" {
 		t.Errorf("Classify failed, should be good, result: %s", class)
 	}
 
-	class = spamc.Classify("i fear god and love the government",lang)
+	class = spamc.Classify("i fear god and love the government", lang)
 	if class != "bad" {
 		t.Errorf("Classify failed, should be bad, result: %s", class)
 	}
@@ -61,8 +61,8 @@ func TestUntrainEn(t *testing.T) {
 	lang := "en"
 
 	spamc.Flush()
-	spamc.Train("good", "sunshine drugs love sex lobster sloth",lang)
-	spamc.Untrain("good", "sunshine drugs love sex lobster sloth",lang)
+	spamc.Train("good", "sunshine drugs love sex lobster sloth", lang)
+	spamc.Untrain("good", "sunshine drugs love sex lobster sloth", lang)
 
 	exists := spamc.RedisClient.Exists(spamc.Redis_prefix + "good")
 	if exists.Val() {

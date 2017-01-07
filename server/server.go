@@ -1,24 +1,23 @@
 package server
 
 import (
+	"comentarismo-spam/spamc"
 	"fmt"
+	"github.com/facebookgo/grace/gracehttp"
+	"github.com/gorilla/pat"
 	"log"
 	"net/http"
 	"os"
-	"github.com/gorilla/pat"
-	"github.com/facebookgo/grace/gracehttp"
-	"comentarismo-spam/spamc"
 )
 
 var (
-	router *pat.Router
+	router             *pat.Router
 	SpamassassinClient *spamc.Client
 )
 
 type WebError struct {
 	Error string
 }
-
 
 func init() {
 	SpamassassinClient = spamc.New("127.0.0.1:783", 10)

@@ -281,7 +281,7 @@ func (s *Client) call(cmd string, msgpars []string, onData FnCallback, extraHead
 
 	// Create Command to Send to spamd
 	cmd += " SPAMC/" + s.ProtocolVersion + "\r\n"
-	cmd += "Content-length: " + fmt.Sprintf("%v\r\n", len(msgpars[0]) + 2)
+	cmd += "Content-length: " + fmt.Sprintf("%v\r\n", len(msgpars[0])+2)
 	//Process Extra Headers if Any
 	if len(*extraHeaders) > 0 {
 		for hname, hvalue := range *extraHeaders {
@@ -455,7 +455,7 @@ func processResponse(cmd string, data *bufio.Reader) (returnObj *SpamDOut, err e
 							}
 							x := strings.Split(lineStr, SPLIT)
 							if lineStr[1:3] == SPLIT {
-								section[tt - 1]["message"] = fmt.Sprintf("%v %v", section[tt - 1]["message"], strings.TrimSpace(lineStr[5:]))
+								section[tt-1]["message"] = fmt.Sprintf("%v %v", section[tt-1]["message"], strings.TrimSpace(lineStr[5:]))
 							} else {
 								if len(x) != 0 {
 									message := strings.TrimSpace(x[2])
